@@ -1,7 +1,7 @@
 [project]
 name = "auto-safety-hil-ecu"
 version = "0.1.0"
-description = "HIL bench: a Python vehicle simulator and an STM32 safety ECU on a real CAN bus"
+description = "A car that learns to drive in a simulator, then drives behind an STM32 safety ECU on a real CAN bus"
 requires-python = "==3.14.*"
 dependencies = [
     "cantools==45.1.0",
