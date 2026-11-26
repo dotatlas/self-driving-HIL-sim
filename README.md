@@ -15,40 +15,16 @@ It is built in two parts.
 - The driver's commands no longer go straight to the car. They go over a car network to an STM32 microcontroller, the safety computer.
 - On its own fixed cycle, the STM32 checks the commands and the sensor data. A good command passes through; when the car gets too close, it brakes on its own. It reports every time it steps in, and each time counts against the run's score, so the driver learns to need it less.
 
-## How data flows (part 2)
+## How it fits together
 
-In part 1 the driver's commands go straight to the simulated car. In part 2 they go through the STM32:
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <img alt="Architecture: on the PC, the simulator feeds the sensors, the PyTorch driver sends gas, brake and steering back, and a trainer improves the driver from each step's score. In part 2 the driver's request goes through a bus to the ECU core, either as a DLL on the PC or over USB, a CAN adapter, a CAN bus and a transceiver to the STM32, and the final command returns to the simulator." src="docs/architecture.png">
+</picture>
 
-```mermaid
-flowchart LR
-    subgraph PC["PC (Windows)"]
-        World["Car simulator<br/>(map, pedestrians, sensors,<br/>optional 3D window)"]
-        Driver["PyTorch driver<br/>(the car's onboard computer)"]
-        Score["Run score<br/>(destination reached?<br/>how often did the ECU step in?)"]
-    end
-    Adapter["USB-to-CAN adapter"]
-    Cable(["CAN bus cable<br/>(two twisted wires)"])
-    Transceiver["CAN transceiver chip"]
-    subgraph STM32["STM32 board (NUCLEO-G474RE, FreeRTOS)"]
-        Check{"Check each message:<br/>intact? new? on time? sensible?"}
-        Decide["Decide: allow, limit or brake"]
-        Distrust["Distrust it: slow down safely"]
-    end
+Blue: the driving loop (part 1 straight back to the simulator, part 2 through the ECU). Grey: the map, the score and the 3D view. Dashed: build time.
 
-    World -- "sensor readings" --> Driver
-    World -- "sensor summaries, over USB" --> Adapter
-    Driver -- "gas, brake, steering, over USB" --> Adapter
-    Adapter --- Cable
-    Cable --- Transceiver
-    Transceiver -- "CAN frames" --> Check
-    Check -- "passes" --> Decide
-    Check -- "fails" --> Distrust
-    Decide -- "final command and any intervention, back over CAN" --> Transceiver
-    Distrust -- "final command, back over CAN" --> Transceiver
-    Adapter -- "final command, over USB" --> World
-    World -- "how the run went" --> Score
-    Score -- "learn, then try again" --> Driver
-```
+In part 2 the STM32 checks every message (intact, new, on time, sensible), then allows the command, limits it, or brakes on its own.
 
 The driver on the PC only asks. The STM32 always decides what the car actually does, and every time it steps in, the run scores lower.
 
