@@ -19,10 +19,10 @@ It is built in two parts.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/training-dark.png">
-  <img alt="Training: a seed picks a random start and goal on the map. Each step the simulator feeds the sensors, the PyTorch driver tries a move, the safety ECU (the C code on the PC, in part 2) checks it, and the car moves. The score of each step goes to the trainer, which updates the driver. Many runs go in parallel with no window, and the finished driver is saved with a model card." src="docs/training.png">
+  <img alt="Training: a seed picks a random start and goal on the map. Each step the simulator feeds the sensors, the PyTorch driver tries a move, the safety ECU (its C code on the PC) checks it, and the car moves. The score of each step goes to the trainer, which updates the driver. Many runs go in parallel with no window, and the finished driver is saved with a model card." src="docs/training.png">
 </picture>
 
-Training runs on the PC only, with no window, one run per CPU core and thousands of runs. Each run starts at a random spot with a random goal. The driver tries moves, the score says how each step went (arriving is good, crashing is bad), and the trainer makes the better moves more likely. The driver's two arrows are the two project phases, never both at once: in part 1 (dashed) there is no safety ECU yet, so each move goes straight to the car; in part 2 every move first passes the safety ECU, here its C code running on the PC (SIL), so training stays fast.
+Training runs on the PC only, with no window, one run per CPU core and thousands of runs. Each run starts at a random spot with a random goal. The driver tries moves, the score says how each step went (arriving is good, crashing is bad), and the trainer makes the better moves more likely. Every move first passes the safety ECU, here its C code running on the PC (SIL), so training stays fast.
 
 ## How a trained driver runs
 
