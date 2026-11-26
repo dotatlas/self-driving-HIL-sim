@@ -33,7 +33,5 @@ Training runs on the PC only, with no window, one run per CPU core and thousands
 
 In the 3D window you pick the map, the driver, the seed and the safety ECU before a run. The route follows the roads from start to goal, and the driver steers toward its next waypoints. The safety ECU is the real STM32 by default (HIL). Tick SIL to use the PC copy instead, or tick both to compare their decisions step by step. The car obeys only the ECU's final command, and every time the ECU steps in, the run scores lower.
 
-> **Not a real safety system.** This is for learning only. It borrows ideas from car safety engineering, but claims no safety standard, and it controls only a simulated car.
-
 ## License
 MIT, see [LICENSE](LICENSE). Third-party code keeps its own license.
