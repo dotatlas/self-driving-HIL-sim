@@ -15,16 +15,23 @@ It is built in two parts.
 - The driver's commands no longer go straight to the car. They go over a car network to an STM32 microcontroller, the safety computer.
 - On its own fixed cycle, the STM32 checks the commands and the sensor data. A good command passes through; when the car gets too close, it brakes on its own. It reports every time it steps in, and each time counts against the run's score, so the driver learns to need it less.
 
-## How it fits together
+## How training works
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
-  <img alt="Architecture: the simulator feeds the sensors, the sensors feed the PyTorch driver. The driver's request (gas, brake, steering) and the sensor readings both go into the Safety ECU every 10 ms, and the Safety ECU sends the final command back to the simulator. A trainer improves the driver from each step's score. The Safety ECU is the same C code, run either as a DLL on the PC (SIL) or on the STM32 over USB, a CAN adapter, the CAN bus and a transceiver (HIL)." src="docs/architecture.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/training-dark.png">
+  <img alt="Training: a seed picks a random start and goal on the map. Each step the simulator feeds the sensors, the PyTorch driver tries a move, the safety ECU (the C code on the PC, in part 2) checks it, and the car moves. The score of each step goes to the trainer, which updates the driver. Many runs go in parallel with no window, and the finished driver is saved with a model card." src="docs/training.png">
 </picture>
 
-Blue: the driving loop. The driver only requests. The Safety ECU does not just wait for requests: every 10 ms it reads the sensors itself, so it can brake for something close even before the next request arrives. It checks each request (intact, new, on time, sensible), then passes it, limits it, or brakes on its own, and the car obeys only its final command. Dashed: in part 1 there is no ECU yet, so the request goes straight to the car. The orange box is the Safety ECU, and only one of its two forms runs at a time: the C code as a DLL on the PC for fast training (SIL), or the same code on the real STM32, reached over USB and the CAN bus, in real time (HIL).
+Training runs on the PC only, with no window, one run per CPU core and thousands of runs. Each run starts at a random spot with a random goal. The driver tries moves, the score says how each step went (arriving is good, crashing is bad), and the trainer makes the better moves more likely. In part 2 every move first passes the safety ECU, here its C code running on the PC (SIL), so training stays fast.
 
-The driver on the PC only asks. The STM32 always decides what the car actually does, and every time it steps in, the run scores lower.
+## How a trained driver runs
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/running-dark.png">
+  <img alt="Running: in the 3D window's settings panel you pick the map, the driver, the seed, and the safety ECU. A route along the roads from the start to the goal feeds the simulator and gives the driver its next waypoints. The trained driver's request and the sensor readings go to the safety ECU, either the C code on the PC (SIL), the real STM32 over USB and CAN (HIL, the default), or both compared side by side. The final command moves the car, and the 3D window shows the scene, every stat and the run." src="docs/running.png">
+</picture>
+
+In the 3D window you pick the map, the driver, the seed and the safety ECU before a run. The route follows the roads from start to goal, and the driver steers toward its next waypoints. The safety ECU is the real STM32 by default (HIL). Tick SIL to use the PC copy instead, or tick both to compare their decisions step by step. The car obeys only the ECU's final command, and every time the ECU steps in, the run scores lower.
 
 > **Not a real safety system.** This is for learning only. It borrows ideas from car safety engineering, but claims no safety standard, and it controls only a simulated car.
 
