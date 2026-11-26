@@ -19,10 +19,10 @@ It is built in two parts.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
-  <img alt="Architecture: the simulator feeds the sensors, the sensors feed the PyTorch driver, the driver sends a request (gas, brake, steering) to the Safety ECU, which also reads the sensors itself every 10 ms, and the Safety ECU sends the final command back to the simulator. A trainer improves the driver from each step's score. The Safety ECU runs either as a DLL on the PC (SIL) or on the STM32, reached over USB, a CAN adapter, the CAN bus and a transceiver (HIL)." src="docs/architecture.png">
+  <img alt="Architecture: the simulator feeds the sensors, the sensors feed the PyTorch driver. The driver's request (gas, brake, steering) and the sensor readings both go into the Safety ECU every 10 ms, and the Safety ECU sends the final command back to the simulator. A trainer improves the driver from each step's score. The Safety ECU is the same C code, run either as a DLL on the PC (SIL) or on the STM32 over USB, a CAN adapter, the CAN bus and a transceiver (HIL)." src="docs/architecture.png">
 </picture>
 
-Blue: the driving loop. The driver only requests. The Safety ECU does not just wait for requests: every 10 ms it reads the sensors itself, so it can brake for something close even before the next request arrives. It checks each request (intact, new, on time, sensible), then passes it, limits it, or brakes on its own, and the car obeys only its final command. Dashed: in part 1 there is no ECU yet, so the request goes straight to the car. The Safety ECU is the same C code in both places: a DLL on the PC for fast training (SIL), or the real STM32 on the CAN bus (HIL).
+Blue: the driving loop. The driver only requests. The Safety ECU does not just wait for requests: every 10 ms it reads the sensors itself, so it can brake for something close even before the next request arrives. It checks each request (intact, new, on time, sensible), then passes it, limits it, or brakes on its own, and the car obeys only its final command. Dashed: in part 1 there is no ECU yet, so the request goes straight to the car. The orange box is the Safety ECU, and only one of its two forms runs at a time: the C code as a DLL on the PC for fast training (SIL), or the same code on the real STM32, reached over USB and the CAN bus, in real time (HIL).
 
 The driver on the PC only asks. The STM32 always decides what the car actually does, and every time it steps in, the run scores lower.
 
