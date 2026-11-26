@@ -19,12 +19,10 @@ It is built in two parts.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
-  <img alt="Architecture: on the PC, the simulator feeds the sensors, the PyTorch driver sends gas, brake and steering back, and a trainer improves the driver from each step's score. In part 2 the driver's request goes through a bus to the ECU core, either as a DLL on the PC or over USB, a CAN adapter, a CAN bus and a transceiver to the STM32, and the final command returns to the simulator." src="docs/architecture.png">
+  <img alt="Architecture: the simulator feeds the sensors, the sensors feed the PyTorch driver, the driver sends a request (gas, brake, steering) to the Safety ECU, and the Safety ECU sends the final command back to the simulator. A trainer improves the driver from each step's score. The Safety ECU runs either as a DLL on the PC (SIL) or on the STM32, reached over USB, a CAN adapter, the CAN bus and a transceiver (HIL)." src="docs/architecture.png">
 </picture>
 
-Blue: the driving loop (part 1 straight back to the simulator, part 2 through the ECU). Grey: the map, the score and the 3D view. Dashed: build time.
-
-In part 2 the STM32 checks every message (intact, new, on time, sensible), then allows the command, limits it, or brakes on its own.
+Blue: the driving loop. The driver only requests; the Safety ECU checks each request (intact, new, on time, sensible), then passes it, limits it, or brakes on its own, and the car obeys only its final command. Dashed: in part 1 there is no ECU yet, so the request goes straight to the car. The Safety ECU is the same C code in both places: a DLL on the PC for fast training (SIL), or the real STM32 on the CAN bus (HIL).
 
 The driver on the PC only asks. The STM32 always decides what the car actually does, and every time it steps in, the run scores lower.
 
